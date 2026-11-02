@@ -1,56 +1,50 @@
-name: Sync Windows EXE from source
+name: Sync Windows EXE Release from source
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version already built in lu920115/chfsgui
+        description: Release version already published in lu920115/chfsgui
         required: true
-        default: 1.5.4
+        default: 1.5.5
         type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: sync-windows-exe-from-source
+  group: sync-windows-exe-release-from-source
   cancel-in-progress: false
 
 jobs:
-  sync-exe:
+  sync-release:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Check out EXE repository
-        uses: actions/checkout@v5
-        with:
-          ref: main
-
-      - name: Download and verify the exact source EXE
+      - name: Download and verify the exact source Release assets
         env:
           APP_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           name="CHFS3.1_GUI二维码增强版_v${APP_VERSION}.exe"
-          base='https://raw.githubusercontent.com/lu920115/chfsgui/master'
-          curl -fL --retry 3 --retry-delay 5 "$base/$name" -o "$name"
-          curl -fL --retry 3 --retry-delay 5 "$base/$name.sha256.txt" -o "$name.sha256.txt"
+          gh release download "v${APP_VERSION}" --repo lu920115/chfsgui \
+            --pattern "$name" --pattern "$name.sha256.txt" --dir release-assets
+          cd release-assets
           sha256sum -c "$name.sha256.txt"
           test "$(head -c 2 "$name")" = 'MZ'
 
-      - name: Commit the identical EXE copy
+      - name: Publish the identical assets to this repository Release
         env:
           APP_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          cd release-assets
           name="CHFS3.1_GUI二维码增强版_v${APP_VERSION}.exe"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- "$name" "$name.sha256.txt"
-          if git diff --cached --quiet; then
-            echo 'The EXE and checksum are already up to date.'
-            exit 0
-          fi
-          git commit -m "Sync v${APP_VERSION} Windows EXE"
-          git push origin HEAD:main
+          gh release create "v${APP_VERSION}" "$name" "$name.sha256.txt" \
+            --repo "$GH_REPO" --target main \
+            --title "CHFS 3.1 Qrcode V${APP_VERSION}" \
+            --notes 'Windows x64 单文件静态版；与源码仓库 Release 文件完全一致。SHA-256 校验文件随附。'
