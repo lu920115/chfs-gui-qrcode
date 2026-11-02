@@ -28,12 +28,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          name="CHFS3.1_GUI二维码增强版_v${APP_VERSION}.exe"
+          # GitHub normalizes non-ASCII Release asset names; keep the local
+          # artifact filename Chinese, but download the actual Release name.
+          asset="CHFS3.1_GUI._v${APP_VERSION}.exe"
           gh release download "v${APP_VERSION}" --repo lu920115/chfsgui \
-            --pattern "$name" --pattern "$name.sha256.txt" --dir release-assets
+            --pattern "$asset" --pattern "$asset.sha256.txt" --dir release-assets
           cd release-assets
-          sha256sum -c "$name.sha256.txt"
-          test "$(head -c 2 "$name")" = 'MZ'
+          expected="$(awk 'NR == 1 {print $1}' "$asset.sha256.txt")"
+          actual="$(sha256sum "$asset" | awk '{print $1}')"
+          test -n "$expected"
+          test "$actual" = "$expected"
+          printf '%s: OK\n' "$asset"
+          test "$(head -c 2 "$asset")" = 'MZ'
 
       - name: Publish the identical assets to this repository Release
         env:
@@ -43,8 +49,8 @@ jobs:
         run: |
           set -euo pipefail
           cd release-assets
-          name="CHFS3.1_GUI二维码增强版_v${APP_VERSION}.exe"
-          gh release create "v${APP_VERSION}" "$name" "$name.sha256.txt" \
+          asset="CHFS3.1_GUI._v${APP_VERSION}.exe"
+          gh release create "v${APP_VERSION}" "$asset" "$asset.sha256.txt" \
             --repo "$GH_REPO" --target main \
             --title "CHFS 3.1 Qrcode V${APP_VERSION}" \
             --notes 'Windows x64 单文件静态版；与源码仓库 Release 文件完全一致。SHA-256 校验文件随附。'
