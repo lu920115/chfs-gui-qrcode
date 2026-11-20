@@ -9,4 +9,4 @@ Cute HTTP File Server 3.1 二维码增强版：单文件 Windows GUI、手机扫
 - 修改版完整源码：[lu920115/chfsgui](https://github.com/lu920115/chfsgui)。
 - 本仓库保留原项目的 [GNU Lesser General Public License v3.0](LICENSE)（LGPL-3.0）许可证文本。
 
-修改版源代码和正式构建工作流均保存在上述源码仓库。源码仓库发布正式 EXE Release 后，本仓库的同步工作流会下载、校验并发布同一份 EXE 与 SHA-256 文件，不重复编译。正式文件只放在两个仓库的 Releases，不提交到仓库根目录；本仓库同时是程序默认更新源。
+修改版源代码和正式构建工作流均保存在上述源码仓库。源码仓库发布正式 EXE Release 后，由完成 GitHub 官方设备授权的发布流程下载、校验并发布同一份 EXE 与 SHA-256 文件到本仓库，不重复编译。该方式兼容非公开源码仓库，不使用目标仓库默认 Token 访问私有源码。正式文件只放在两个仓库的 Releases，不提交到仓库根目录；本仓库同时是程序默认更新源。
